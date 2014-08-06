@@ -4,6 +4,9 @@ import org.apache.ftpserver.DefaultDataConnectionConfiguration;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.interfaces.DataConnectionConfiguration;
 import org.apache.log4j.Logger;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +26,7 @@ public class HdfsOverFtpServer {
 	private static String passivePorts = null;
 	private static String sslPassivePorts = null;
 	private static String hdfsUri = null;
+	private static String[] hdfsUriArray;
 
 	public static void main(String[] args) throws Exception {
 		loadConfig();
@@ -80,6 +84,7 @@ public class HdfsOverFtpServer {
 			log.fatal("hdfs-uri is not set");
 			System.exit(1);
 		}
+		hdfsUriArray = hdfsUri.split(",");
 
 		String superuser = props.getProperty("superuser");
 		if (superuser == null) {
@@ -99,7 +104,16 @@ public class HdfsOverFtpServer {
 		log.info(
 				"Starting Hdfs-Over-Ftp server. port: " + port + " data-ports: " + passivePorts + " hdfs-uri: " + hdfsUri);
 
-		HdfsOverFtpSystem.setHDFS_URI(hdfsUri);
+		for (String uri : hdfsUriArray) {
+			HdfsOverFtpSystem.setHDFS_URI(uri);
+			try {
+				DistributedFileSystem dfs = HdfsOverFtpSystem.getDfs();
+				FileStatus fs = dfs.getFileStatus(new Path("/"));
+				break;
+			} catch (IOException e) {
+				log.debug(uri + " is not dir", e);
+			}
+		}
 
 		FtpServer server = new FtpServer();
 
@@ -139,8 +153,16 @@ public class HdfsOverFtpServer {
 		log.info(
 				"Starting Hdfs-Over-Ftp SSL server. ssl-port: " + sslPort + " ssl-data-ports: " + sslPassivePorts + " hdfs-uri: " + hdfsUri);
 
-
-		HdfsOverFtpSystem.setHDFS_URI(hdfsUri);
+		for (String uri : hdfsUriArray) {
+			HdfsOverFtpSystem.setHDFS_URI(uri);
+			try {
+				DistributedFileSystem dfs = HdfsOverFtpSystem.getDfs();
+				FileStatus fs = dfs.getFileStatus(new Path("/"));
+				break;
+			} catch (IOException e) {
+				log.debug(uri + " is not dir", e);
+			}
+		}
 
 		FtpServer server = new FtpServer();
 

@@ -36,6 +36,7 @@ public class HdfsOverFtpSystem {
 	}
 
 	public static void setHDFS_URI(String HDFS_URI) {
+		dfs = null;
 		HdfsOverFtpSystem.HDFS_URI = HDFS_URI;
 	}
 
